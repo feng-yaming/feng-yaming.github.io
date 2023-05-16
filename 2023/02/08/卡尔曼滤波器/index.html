@@ -1,0 +1,470 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Ming | Ming</title><meta name="author" content="Ming"><meta name="copyright" content="Ming"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="https:&#x2F;&#x2F;engineeringmedia.com&#x2F;controlblog&#x2F;the-kalman-filter #2：卡尔曼滤波器布莱恩·道格拉斯  2021 年 2 月 25 日这是我为Mathworks撰写的关于传感器融合和跟踪的电子书的节选。他们慷慨地让我为这个博客复制其中的一部分。它已经过修改和更新，以提高清晰度并使其独立于电子书的其余部分。您可以在此处下载完整的电子书： https">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ming">
+<meta property="og:url" content="http://feng-yaming.github.io/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/index.html">
+<meta property="og:site_name" content="Ming">
+<meta property="og:description" content="https:&#x2F;&#x2F;engineeringmedia.com&#x2F;controlblog&#x2F;the-kalman-filter #2：卡尔曼滤波器布莱恩·道格拉斯  2021 年 2 月 25 日这是我为Mathworks撰写的关于传感器融合和跟踪的电子书的节选。他们慷慨地让我为这个博客复制其中的一部分。它已经过修改和更新，以提高清晰度并使其独立于电子书的其余部分。您可以在此处下载完整的电子书： https">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://feng-yaming.github.io/img/background.jpg">
+<meta property="article:published_time" content="2023-02-08T13:43:35.914Z">
+<meta property="article:modified_time" content="2023-02-08T13:46:16.764Z">
+<meta property="article:author" content="Ming">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://feng-yaming.github.io/img/background.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://feng-yaming.github.io/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: true,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Ming',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-02-08 21:46:16'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 照片</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/background.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Ming</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 照片</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">无题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-02-08T13:43:35.914Z" title="发表于 2023-02-08 21:43:35">2023-02-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-02-08T13:46:16.764Z" title="更新于 2023-02-08 21:46:16">2023-02-08</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">7.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>22分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><a target="_blank" rel="noopener" href="https://engineeringmedia.com/controlblog/the-kalman-filter">https://engineeringmedia.com/controlblog/the-kalman-filter</a></p>
+<p>#2：卡尔曼滤波器<br>布莱恩·道格拉斯  2021 年 2 月 25 日<br>这是我为Mathworks撰写的关于传感器融合和跟踪的电子书的节选。他们慷慨地让我为这个博客复制其中的一部分。它已经过修改和更新，以提高清晰度并使其独立于电子书的其余部分。您可以在此处下载完整的电子书：</p>
+<p><a target="_blank" rel="noopener" href="https://www.mathworks.com/campaigns/offers/understand-multi-object-tracking.html">https://www.mathworks.com/campaigns/offers/understand-multi-object-tracking.html</a> </p>
+<p>这是一篇很长的文章。这是那些匆忙的人的tl; dr！</p>
+<p>卡尔曼滤波器是我们用来估计系统状态的算法。它通过将来自传感器的噪声测量与来自过程模型的有缺陷的预测相结合来实现这一点。如果测量噪声可以建模为高斯分布并且过程模型可以建模为具有高斯误差分布的线性，那么线性卡尔曼滤波器将产生最佳状态估计。最优估计结果是两个高斯分布的乘积。因此，线性卡尔曼滤波器方程可以被认为是一个预测步骤加上高斯乘法。我认为那太棒了！</p>
+<p>好的，现在开始完整的帖子。</p>
+<p>我们想要准确估计系统状态的原因有很多。其中之一是我们在反馈控制中需要它来确定如何改变系统。例如，如果我们试图控制某物的温度，我们需要对当前温度有一个很好的估计，以便知道我们是否需要增加热量或从系统中移除热量。</p>
+<p>很明显，直接用一个或多个传感器测量系统是一种估计状态的方法，然而，可能不明显的是，我们通常可以通过提供传感器本身测量的信息之外的额外信息来改进我们的估计。我们使用一些附加信息的方法之一是使用卡尔曼滤波器。</p>
+<p>预测正确.png<br>卡尔曼滤波器是一类使用两步过程（即预测和校正）来产生最佳状态估计的估计滤波器的一部分。</p>
+<p>如果系统可以用线性模型描述，并且过程噪声和测量噪声的概率分布是高斯分布，那么线性卡尔曼滤波器将产生最优状态估计。</p>
+<p>线性高斯.png<br>但在实践中，没有真正的系统是真正线性的，噪声可能不具有完美的高斯概率分布，这意味着线性卡尔曼滤波器的结果对于实际系统永远不是绝对最优的。然而，它们仍然可以很好地解决许多现实生活中的问题，您从理解线性卡尔曼滤波器中获得的直觉可以帮助您更好地理解它们的非线性对应物，如扩展卡尔曼滤波器、西格玛点滤波器和粒子滤波器。</p>
+<p>如果我刚才描述的所有内容现在对您来说意义不大，请不要担心，因为我将在本文中更多地涉及其中的一些内容。话虽如此，让我们通过一个最小的数学方法来理解线性卡尔曼滤波器。</p>
+<p>人们如何估计状态？<br>我们可以从思考我们作为人类如何估计事物的状态开始。例如，我们如何知道车辆的速度、电路的电压或一天中的时间？</p>
+<p>显而易见的答案是我们直接用传感器测量它，就像我们用速度计、电压表或时钟一样。同样，我们可以通过测量其他量来推导出我们想要的状态。如果我们 使用两个连续位置 测量值之间的差异来 估计速度 ，就会出现这种情况。</p>
+<p>测量.png<br>但是，作为人类，我们还有其他知识可以用来挑战我们测量的有效性。我们有世界的心智模型，我们使用这些模型来创建对我们正在测量的内容的期望。如果我们的期望与测量结果不同，我们会经历一个过程，试图确定我们更信任哪个结果。如果我们对这两个结果都有些信任，但都不完全信任，那么我们可能会将它们混合在一起以产生最佳猜测。</p>
+<p>例如，如果你看手表，它显示现在是下午 4:37，然后你等了大约一分钟，再次查看，它显示是下午 6:15，你不会自动相信这个结果。我们对时间的流逝和宇宙应该如何表现有这种普遍的理解，这种额外的知识使我们能够预测系统状态在一段时间内应该如何变化。在这种情况下，我们会假设我们的传感器（手表）出现故障并且我们会更加相信我们对时间的估计。</p>
+<p>预测.png<br>如果我们的模型很好，为什么还要使用测量值呢？<br>如果我们有一个完美的模型并且我们知道系统的初始条件，那么我们将能够完美地预测系统状态将如何随时间变化。我的意思是，如果我们什么都知道，为什么还要摆弄传感器呢？好吧，不幸的是，我们预测某事结果的能力并不完美，它容易出错。这个错误来自于我们错误的系统模型，以及不知道和考虑所有可能影响系统状态的外部输入。因此，将系统状态完全基于我们有缺陷的预测是不明智的。通常，我们预测未来的时间越长，我们对答案的确定性就越低，因为错误往往会随着时间的推移而累积。</p>
+<p>继续以手表为例，如果您查看了手表，然后等了您认为是一个小时但根据您的手表只有 54 分钟，那么您可能更倾向于相信测量结果并打折您的预测。</p>
+<p>这正是卡尔曼滤波器背后的思维过程。它将（以最佳方式）来自嘈杂传感器的测量值和来自有缺陷模型的预测相结合，以获得比任何一个独立提供的系统状态更准确的估计。</p>
+<p>那么，卡尔曼滤波器是如何做到这一点的呢？</p>
+<p>余额.png<br>让我们看看一些数学！<br>这些是线性卡尔曼滤波器的离散时间方程。乍一看，它们似乎很复杂，如果您不熟悉数学符号，那么可能也有点荒谬。</p>
+<p>它们被分为预测（使用模型）和校正（使用测量），因此估计状态的过程分为两步。预测步骤负责使用线性模型将状态向量传播到未来，而正确步骤将当前预测与当前测量相结合以获得正确的估计状态。</p>
+<p>linear_kalman_filter_math.png<br>现在，与其现在尝试通过这些方程式，我认为如果我们以图形方式查看线性卡尔曼滤波器背后的一般概念，它们会更有意义。之后我们会回到这些方程式。</p>
+<p>更少的数学，让我们看一些图片！<br>卡尔曼滤波器和其他估计滤波器能够估计系统的未来状态，因为我们赋予它们以数学模型的形式进行预测的能力。使用此模型，过滤器在每个时间步向前传播状态。这相当于我们人类在脑海中记录时间的流逝。</p>
+<p>在某些时候，真实状态是用有噪声的传感器测量的。我们现在有两个可能不同的系统状态估计；我们有一个预测状态和一个测量状态。问题是，哪一个是正确的？</p>
+<p>好吧，既然它们都有不确定性，问题就应该是，我们如何根据它们的相对不确定性将两者结合起来？</p>
+<p>估计_filter.png<br>卡尔曼滤波器确定应用于预测和测量的信任度或权重，以便将校正后的状态准确地放置在两者之间的最佳位置。这种平衡行为取决于不确定性的数学表示，我们以协方差的形式获得。</p>
+<p>方差是可变性的量度<br>要理解协方差，我们需要先看看方差。非正式地，方差是分布宽度的度量。它表示该参数有多少可变性。  </p>
+<p>举个简单的例子，想象一下站在田野中央，通过掷硬币来决定前进的方向。正面朝前一步，反面朝后一步。翻转 100 次后，您记录从开始的地方走了多少步。</p>
+<p>现在想象一下这个过程运行 10,000 次；始终从零开始，并记录您在抛 100 次硬币后的结果。您将创建一个如下所示的直方图。</p>
+<p>历史.jpg<br>我们可以使用三个信息来描述这种分布。</p>
+<p> 分布的一般形状是什么？在我们的例子中，这是经典的“钟形曲线”形状，也称为高斯分布或正态分布。</p>
+<p>数轴上的分布在哪里？要定义这一点，我们可以使用平均值（或均值）。因此，我们的分布位于 0，因为它的平均值为 0 步。</p>
+<p>分布宽度是多少？换句话说，分布中存在多少可变性。为了定义这一点，我们可以使用标准差 σ。在此示例中，它大约是 10 个步骤。</p>
+<p>在数学上，方差是标准偏差的平方，因此通常写为 σ^2。因此，我们的抛硬币过程产生一个均值为 0 步且方差约为 100 步^2 的正态分布。</p>
+<p>了解所有这些很重要，因为我们可以使用这些概率分布来描述卡尔曼滤波器预测中的不确定性、传感器测量中的不确定性以及数学模型中的不确定性。</p>
+<p>我们稍后会谈到这一点，但首先，如果有多个参数，我们需要跟踪每个参数的方差。例如，我们可能对物体的位置和速度感兴趣，并且这些变量中的每一个的分布可能不同。</p>
+<p>方差.png<br>为了便于图形解释，继续使用椭圆表示这些不相等的方差可能会有所帮助，其中长轴和短轴设置为该维度的方差。因此，在下图中，这以图形方式表明我们在位置方面的不确定性比在速度方面的不确定性更大。</p>
+<p>方差.png<br>协方差是广义方差<br>然而，方差并不能说明全部情况，因为还需要考虑的是这两个状态可能相关。这意味着一个状态的值的可能性取决于另一个状态的值。因此，我们需要描述协方差。</p>
+<p>让我们回到我们对位置和速度感兴趣的双态系统。我们可以分别估计位置和速度，并根据各自的方差处理两个维度的不确定性。然而，位置和速度 是 相关的。物体移动得越快，位置在测量之间移动的距离就越远。因此，知道速度可以为我们提供有关预期位置的额外信息，而了解位置可以为我们提供有关物体行进速度的额外信息。</p>
+<p>协方差以一种显示两种状态之间相关性的方式扭曲了我们的椭圆。</p>
+<p>协方差.png<br>既然可以创建矩阵，为什么还要画椭圆呢？<br>我们在协方差矩阵中捕获这种相关性。协方差矩阵是一个方阵，其行数和列数等于状态变量数。因此，我们的位置和速度系统将具有 2x2 协方差矩阵P。对角线项是每个状态与其自身的方差，非对角线项是每个状态与所有其他状态的协方差。</p>
+<p>协方差矩阵.png<br>因此，如果我们有两个不相关的状态变量，那么协方差矩阵将是对角矩阵，并且每一项都代表该状态的方差。</p>
+<p>回顾：</p>
+<p>卡尔曼滤波器将噪声测量与有缺陷的预测相结合，以创建最佳状态估计。</p>
+<p>我们可以使用协方差来衡量噪声测量、有缺陷的模型和最终估计中存在多少不确定性。</p>
+<p>由于协方差是多维的，因此以矩阵形式维护它在数学上更容易。</p>
+<p>卡尔曼滤波器使用三种不同的协方差矩阵（测量、模型、最终估计）来维持系统状态的估计。</p>
+<p>让我们通过一个思维练习来解释过滤器中的不同协方差矩阵。</p>
+<p>传感器并不完美<br>测量噪声协方差矩阵R捕获您对传感器测量的预期不确定性。我认为测量中的不确定性很容易理解。有一个真实的状态，我们想知道它的值，但不幸的是，我们必须用嘈杂的传感器来测量它。</p>
+<p>measurement_noise_1.png<br>如果我们多次测量状态，由于随机噪声，我们会看到来自传感器的不同结果。这类似于早期的抛硬币示例。</p>
+<p>measurement_noise_2.png<br>如果噪声的均值为零，那么这组测量值将全部以真实状态为中心。如果噪声是高斯分布的，则测量值将遵循正态概率分布，其中分布的宽度或传感器中的噪声量是方差。</p>
+<p>measurement_noise_3.png<br>如果所有被测量的状态都是不相关的，那么测量协方差矩阵将是对角线并且误差椭圆将与状态变量对齐。例如，x 轴测量误差不取决于系统在 y 轴上的位置的位置传感器就是这种情况。  </p>
+<p>measurement_noise_4.png<br>如果状态之间存在相关性，则非对角线项将表示一个测量值如何影响另一个测量值的不确定性。</p>
+<p>流程模型并不完美<br>为了进行预测，我们从初始状态开始，然后使用数学模型将该状态传播到未来。这整个过程都存在不确定性。首先，甚至在我们开始预测过程之前的初始状态都有错误。这是在预测误差协方差矩阵P中捕获的。这意味着即使有一个完美的模型，这种开始的不确定性也永远不会消失，最终的预测也会有与之相关的不确定性。</p>
+<p>想象一架飞机正以 400 英里&#x2F;小时的速度行驶，你被要求预测它在一小时内的位置。你知道它会比起始位置多 400 英里，但如果你不确定起始位置是什么，那么你的最终答案也会有同样多的不确定性。</p>
+<p>屏幕截图 2020-12-20 下午 2.27.41.png<br>更糟糕的是，如果模型不完美（它永远不会完美！），预测未来的行为会导致额外的不确定性。我们必须预测的未来越远，它变得越不确定，因此预测误差协方差会随着时间的推移而增长。</p>
+<p>我们指定不确定性如何随过程噪声协方差矩阵Q增长。该矩阵捕获来自模型差异和系统未知输入的不确定性。</p>
+<p>process_noise.png<br>一旦是高斯分布，始终是高斯分布（如果是线性的）<br>因此，我们使用预测误差协方差矩阵P跟踪卡尔曼滤波器预测状态的不确定性。</p>
+<p>我们使用过程模型及其过程噪声协方差矩阵Q向前传播预测状态。</p>
+<p>我们正在使用噪声测量值及其测量噪声协方差矩阵R更新估计值。</p>
+<p>感觉就像所有这些将所有这些部分组合起来并传播到未来的数学，一切都会弄乱我们漂亮的高斯分布。但幸运的是 - 重要的是！- 高斯概率分布在进行线性运算时保持其高斯形状。  </p>
+<p>因此，如果初始分布是高斯分布并且过程模型是线性的（或者在运行它之前已经线性化），那么最终的预测不确定性在本质上仍然是高斯分布的。它可以更宽或更窄，但它只是一个高斯形状。因此，为什么高斯分布和线性模型对卡尔曼滤波器如此重要！</p>
+<p>那么，我们如何管理所有这些呢？<br>我们现在可以将所有这些不确定性（预测误差协方差P、过程噪声协方差Q和测量噪声协方差R）构建到一个连贯的工作流程中。</p>
+<p>在时间步长 K，我们从初始状态及其相关的误差协方差P开始，用椭圆表示。</p>
+<p>不确定性_1.png<br>我们使用系统模型将状态和误差协方差传播到未来（时间步长 k + 1）。误差协方差根据指定的过程噪声协方差Q增长。</p>
+<p>uncertainty_2.png<br>我们在每个时间步继续传播预测。误差协方差将继续增长，但它将保持其高斯形状。</p>
+<p>uncertainty_3.png<br>当噪声测量可用时，它将具有自己的不确定性，其服从由测量噪声协方差R指定的高斯分布。</p>
+<p>uncertainty_4.png<br>此时，我们有一个预测状态，其不确定性由预测误差协方差描述，我们有一个测量状态，其不确定性由测量噪声协方差描述。现在，我们回到我们的问题，即如何最佳地结合这两个估计。这就是卡尔曼滤波器神奇之处。为了获得最佳的校正状态，我们需要做的就是……鼓声，请……将两个高斯分布相乘。</p>
+<p>两个高斯的乘积是第三个高斯！生成的分布表示最佳校正状态（分布的均值）和结果的不确定性（分布的协方差）。较低的协方差意味着您对估计状态更有信心。</p>
+<p>optimal_estimate.png<br>因此，现在我们可以将卡尔曼滤波器视为一种算法，它只运行一个预测模型，然后乘以两个高斯分布：预测及其不确定性分布与测量及其不确定性分布。</p>
+<p>然而，要真正理解卡尔曼滤波器方程，我们应该花一些时间扩展乘以两个高斯分布的数学。</p>
+<p>高斯乘法快速概览<br>高斯分布的方程是分布均值 μ及其偏差 σ的函数。</p>
+<p>高斯.png<br>让我们为预测分布分配μ 0 和σ 0 ，为测量分布分配μ 1 和 σ 1 。将这两个高斯分布相乘，并对结果进行采样，得到一个新的分布。</p>
+<p>高斯乘法.png<br>现在的问题是，“结果分布的新均值μ”和新方差σ’^2看起来像什么？如果我们能解决它们，那么我们就会知道最优状态估计及其相关的不确定性。</p>
+<p>不幸的是，解决和简化这个方程需要的垂直空间比我愿意在这篇博文中投入的更多，所以我们只是跳到最终结果，因为这对我们正在做的事情来说真的很重要。有关证明，请查看Norbert Freier的这篇论文中的定理 1 和定理 2。结果高斯分布的均值 μ’和方差 σ’^2如下所示：</p>
+<p>屏幕截图 2021-02-26 at 8.55.35 AM.png<br>那么这告诉我们什么？如果我们知道过程模型的输出（平均值）以及我们对它的信任程度（方差），并且我们知道来自传感器的测量值（平均值）以及我们对传感器的信任程度（方差），那么我们可以将它们与上述等式以产生最佳估计。  </p>
+<p>我听说过的卡尔曼增益怎么样？<br>新均值和偏差的方程式看起来很复杂，但它们有一个共同的乘数，我们可以将其分解出来以简化它们。这个乘数k是最佳卡尔曼增益。该值介于 0 和 1 之间，反映了预测与测量的相对不确定性。</p>
+<p>屏幕截图 2021-02-26 8.55.53 AM.png<br>有趣的是，假设我们的传感器测得的值为 5，方差为 2。假设我们的预测值也为 5，方差也为 2。乍看起来，混合这些加在一起不会改善我们的估计，因为它们具有相同的值。但是，如果您研究这些方程式，您会发现合并后的估计值仍具有相同的平均值 5，但只有其中任何一个的方差的一半。</p>
+<p>例子.png<br>因此，在这种情况下，即使答案没有改变，我们也更加确定了答案。这是有道理的，因为如果你有两种不同的方法告诉你同一件事，那么你应该更有信心答案是正确的。</p>
+<p>好的，我想我们又准备好过滤方程式了<br>现在我们知道卡尔曼滤波器通过将两个高斯函数相乘来简单地将不完美的预测与不完美的测量相结合，我们开始的线性卡尔曼滤波器方程应该更有意义。让我们从过滤器如何使用过程模型预测估计的未来状态开始。</p>
+<p>屏幕截图 2020-12-20 下午 3.49.13.png<br>通过考虑系统的动态以及外部控制输入如何影响未来状态，我们得到了预测状态估计。</p>
+<p>预测步骤的第二部分是向前传播误差协方差。请记住，当我们预测时，错误来自两个不同的来源：当我们开始预测时，我们在系统状态中存在初始不确定性，并且随着我们及时向前传播状态而增加了额外的不确定性。我们传播的时间越长，我们的预测就越不确定。这正是这个等式所做的。</p>
+<p>屏幕截图 2020-12-20 下午 3.48.27.png<br>通过预测，我们现在可以专注于使用测量来纠正预测状态。校正步骤中的每个方程都可以通过认识到它们完成高斯乘法的特定部分来理解。</p>
+<p>新息残差是传感器输出 z 与预测状态 x 之间的差值，后者旋转到具有H的传感器输出帧中。如果传感器直接测量状态，则H &#x3D; 1；</p>
+<p>innovation_residual.png<br>创新协方差是预测协方差P和测量协方差R的总和。这两者都在不同的框架中表示（状态框架与测量框架），因此在求和之前使用H将P旋转到传感器框架中。</p>
+<p>innovation_covariance.png<br>卡尔曼增益是预测协方差（在传感器框架中）与传感器框架中的创新协方差S的比率。</p>
+<p>卡尔曼增益.png<br>校正后的状态估计介于预测状态和测量值之间。预测状态已被卡尔曼增益乘以创新残差“修正”。</p>
+<p>校正后的估计协方差小于预测协方差和测量协方差，因为两组信息都用于改善另一组信息的不确定性。</p>
+<p>corrected_estimate_covariance.png<br>我们现在对卡尔曼滤波器的内部工作原理有了大致的了解，但是，为了能够自己构建一个，我们还需要考虑一些额外的事情。接下来几节的目标不是全面描述设置和运行您自己的卡尔曼滤波器所需了解的一切（这需要一本完整的书才能做到），相反，目标是向您介绍其中一些主题，以便在处理下一个状态估计问题时至少将它们牢记在心。</p>
+<p>设置过滤器时需要考虑的事项<br>正如我们所见，卡尔曼滤波器需要一个数学模型来预测未来状态。模型尽可能接近系统的真实性质至关重要，因为任何错误、遗漏或不准确都会降低过滤器的实用性。</p>
+<p>这样想，如果模型不好，则必须增加过程噪声来解决它。这将导致预测的不确定性远大于测量的不确定性，因为我们对模型的信心较低。这将导致卡尔曼增益严重偏向于测量值，而预测值实际上将被忽略。</p>
+<p>因此，使用非常糟糕的模型运行卡尔曼滤波器与直接使用传感器测量值几乎没有什么不同。</p>
+<p>坏模型.png<br>由于模型准确性非常重要，因此首先围绕创建模型的过程进行整个研究领域是有道理的。</p>
+<p>我们已经谈到了测量噪声，但我们现在需要考虑的是如何构建测量噪声协方差矩阵。也就是说，我们如何找到传感器的值？</p>
+<p>一个简单的解决方案是设置一个测试，让传感器测量一个静态量，并从噪​​声结果中得出方差。例如，您可以将陀螺仪放置在惯性固定平台上，然后计算与零速率的标准偏差的平方。</p>
+<p>您可以对系统中的每个传感器执行此操作，然后测量噪声矩阵可以只是每个传感器沿对角线的方差。</p>
+<p>getting_measurement_covariance.png<br>另一件需要考虑的事情是，当滤波器基于传感器误差的实时估计运行时，传感器方差可能会发生变化。例如，GPS 精度取决于可用卫星的数量及其相对于接收器的几何形状。该精度稀释 (DOP) 项与测量位置一起生成，可用于调整单个测量的方差。</p>
+<p>DOP.png<br>过程噪声协方差矩阵需要考虑未知输入和建模差异，但这在测量或估计时有点棘手。如果您无法了解真实系统在每个操作场景中的行为方式，则很难量化您的模型与事实的差距。</p>
+<p>解决这个问题的一种方法是在真实的操作环境中运行物理系统。然后，您可以将其行为与在相同环境条件下运行的模型进行比较。可以通过查看误差的标准偏差再次计算方差。</p>
+<p>testing_for_process_noice.png<br>通常，当您听到“调整卡尔曼滤波器”这句话时，它意味着您正在调整过程噪声和测量噪声矩阵，并试图找到产生可接受结果的东西。而且，通常，您花费最多时间的矩阵取决于它是更难理解的模型还是传感器。</p>
+<p>我们可以控制的卡尔曼滤波器的另一个方面是如何初始化它。我们需要一个初始状态和协方差，以便预测步骤可以从某个地方开始。如果我们使用线性卡尔曼滤波器，我们几乎可以选择我们想要的任何状态，它最终会收敛——如果它的初始化离真相太远，它只会花费更多时间。</p>
+<p>bad_estimate_linear.png<br>但是，扩展卡尔曼滤波器 (EKF) 并非如此。EKF 使用非线性模型传播状态和协方差。它的工作原理是围绕当前估计对模型进行线性化，然后使用该线性模型将状态传播到未来。如果滤波器未初始化得足够接近真实状态，则线性化过程可能偏离得太远，导致滤波器永远不会真正收敛。因此，重要的是找到一种方法来获得准确的初始状态。</p>
+<p>bad_estimate_nonlinear.png<br>有几种方法可以用可接受的初始状态来初始化估计滤波器。一种是使用预先确定的硬编码状态简单地初始化过滤器，并确保系统在过滤器开始运行时处于该状态。例如，您可以在环境中使用夹具或其他标记，以确保系统处于预期状态。</p>
+<p>已知状态.png<br>另一种方法是使用来自传感器的原始测量值来设置初始状态。传感器会有噪声和其他误差，但希望它们仍能提供足够接近滤波器可以收敛的真实值的测量值。</p>
+<p>测量状态.png<br>这给我们带来了融合的概念。如果您在启动过滤器时没有对系统状态进行良好的初始估计，那么您不能立即相信结果是有道理的。在估计的状态和协方差接近真实情况之前，您必须给它一些时间来读取传感器并运行校正步骤——可能有很多校正步骤。</p>
+<p>例如，下图显示了未加速的物体的假设估计速度。您希望卡尔曼滤波器的输出显示固定速度，但是，加速度计有一个未考虑的轻微正偏差。卡尔曼滤波器设置为估计偏差，但已初始化为 0 m&#x2F;s2。当过滤器运行时，第二个传感器直接测量物体的速度并用于校正估计状态。每个校正步骤都会更新速度和加速度计偏差。偏置误差会随着时间的推移而降低，并最终与真实的传感器偏置相匹配。此时，过滤器已经收敛，输出可以信任。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://feng-yaming.github.io">Ming</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://feng-yaming.github.io/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/">http://feng-yaming.github.io/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://feng-yaming.github.io" target="_blank">Ming</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/background.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/gh/overtrue/share.js@master/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/img/wechat.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/img/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/img/alipay.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/02/08/11/"><img class="next-cover" src="/img/background.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info"></div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div><div id="comment-switch"><span class="first-comment">Valine</span><span class="switch-btn"></span><span class="second-comment">Twikoo</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Ming</div><div class="author-info__description">Share some knowledge</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/feng-yaming" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:2822398231@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a><a class="social-icon" href="/2822398231" target="_blank" title="QQ"><i class="fab fa-qq"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">怕什么真理无穷，进一寸有一寸的欢喜</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/" title="无题"><img src="/img/background.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/02/08/%E5%8D%A1%E5%B0%94%E6%9B%BC%E6%BB%A4%E6%B3%A2%E5%99%A8/" title="无题">无题</a><time datetime="2023-02-08T13:43:35.914Z" title="发表于 2023-02-08 21:43:35">2023-02-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/02/08/11/" title="无题"><img src="/img/background.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/02/08/11/" title="无题">无题</a><time datetime="2023-02-08T13:38:30.504Z" title="发表于 2023-02-08 21:38:30">2023-02-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/08/05/electricity/" title="Proteus中常用的元器件"><img src="/img/8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Proteus中常用的元器件"/></a><div class="content"><a class="title" href="/2022/08/05/electricity/" title="Proteus中常用的元器件">Proteus中常用的元器件</a><time datetime="2022-08-05T04:47:28.000Z" title="发表于 2022-08-05 12:47:28">2022-08-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/06/26/git%E4%BD%BF%E7%94%A8/" title="Git使用，Markdown语法"><img src="/img/4.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git使用，Markdown语法"/></a><div class="content"><a class="title" href="/2022/06/26/git%E4%BD%BF%E7%94%A8/" title="Git使用，Markdown语法">Git使用，Markdown语法</a><time datetime="2022-06-26T14:19:11.000Z" title="发表于 2022-06-26 22:19:11">2022-06-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/06/21/%E5%8D%B7%E7%A7%AF%E4%B8%8E%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B%E3%80%81%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E5%8F%98%E6%8D%A2/" title="卷积与微分方程、拉普拉斯变换"><img src="/img/3.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="卷积与微分方程、拉普拉斯变换"/></a><div class="content"><a class="title" href="/2022/06/21/%E5%8D%B7%E7%A7%AF%E4%B8%8E%E5%BE%AE%E5%88%86%E6%96%B9%E7%A8%8B%E3%80%81%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E5%8F%98%E6%8D%A2/" title="卷积与微分方程、拉普拉斯变换">卷积与微分方程、拉普拉斯变换</a><time datetime="2022-06-21T03:53:03.000Z" title="发表于 2022-06-21 11:53:03">2022-06-21</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By Ming</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,I`m Ming,welcome to my<a href="https://feng-yaming.github.io/"> blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'AKhKLlqm08rt0WILz6cvL2vF-gzGzoHsz',
+      appKey: 'Fca8LxzN0rz4Pl9Ic9PbHpeu',
+      avatar: 'monsterid',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: true
+    }, null))
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Valine' === 'Valine' || !true) {
+  if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script><script>(()=>{
+  const init = () => {
+    twikoo.init(Object.assign({
+      el: '#twikoo-wrap',
+      envId: '',
+      region: '',
+      onCommentLoaded: function () {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      }
+    }, null))
+  }
+
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: '',
+      region: '',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(function (res) {
+      countELement.innerText = res[0].count
+    }).catch(function (err) {
+      console.error(err);
+    });
+  }
+
+  const runFn = () => {
+    init()
+    GLOBAL_CONFIG_SITE.isPost && getCount()
+  }
+
+  const loadTwikoo = () => {
+    if (typeof twikoo === 'object') {
+      setTimeout(runFn,0)
+      return
+    } 
+    getScript('https://cdn.jsdelivr.net/npm/twikoo@1/dist/twikoo.all.min.js').then(runFn)
+  }
+
+  if ('Valine' === 'Twikoo' || !true) {
+    if (true) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo()
+  } else {
+    window.loadOtherComment = () => {
+      loadTwikoo()
+    }
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/blueimp-md5/js/md5.min.js"></script><script>window.addEventListener('load', () => {
+  const changeContent = (content) => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g,"") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0,150) + '...'
+    }
+    return content
+  }
+
+  const getIcon = (icon, mail) => {
+    if (icon) return icon
+    let defaultIcon = '?d=monsterid'
+    let iconUrl = `https://gravatar.loli.net/avatar/${md5(mail.toLowerCase()) + defaultIcon}`
+    return iconUrl
+  }
+
+  const generateHtml = array => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class=\'aside-list-item\'>'
+
+        if (true) {
+          const name = 'src'
+          result += `<a href='${array[i].url}' class='thumbnail'><img ${name}='${array[i].avatar}' alt='${array[i].nick}'></a>`
+        }
+
+        result += `<div class='content'>
+        <a class='comment' href='${array[i].url}' title='${array[i].content}'>${array[i].content}</a>
+        <div class='name'><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '没有评论'
+    }
+
+    let $dom = document.querySelector('#card-newest-comments .aside-list')
+    $dom.innerHTML= result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh($dom)
+  }
+
+  const getComment = () => {
+    const serverURL = 'https://AKhKLlqm.api.lncldglobal.com'
+
+    var settings = {
+      "method": "GET",
+      "headers": {
+        "X-LC-Id": 'AKhKLlqm08rt0WILz6cvL2vF-gzGzoHsz',
+        "X-LC-Key": 'Fca8LxzN0rz4Pl9Ic9PbHpeu',
+        "Content-Type": "application/json"
+      },
+    }
+
+    fetch(`${serverURL}/1.1/classes/Comment?limit=6&order=-createdAt`,settings)
+      .then(response => response.json())
+      .then(data => {
+        const valineArray = data.results.map(function (e) {
+          return {
+            'avatar': getIcon(e.QQAvatar, e.mail),
+            'content': changeContent(e.comment),
+            'nick': e.nick,
+            'url': e.url + '#' + e.objectId,
+            'date': e.updatedAt,
+          }
+        })
+        saveToLocal.set('valine-newest-comments', JSON.stringify(valineArray), 10/(60*24))
+        generateHtml(valineArray)
+      }).catch(e => {
+        const $dom = document.querySelector('#card-newest-comments .aside-list')
+        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
+      }) 
+  }
+
+  const newestCommentInit = () => {
+    if (document.querySelector('#card-newest-comments .aside-list')) {
+      const data = saveToLocal.get('valine-newest-comments')
+      if (data) {
+        generateHtml(JSON.parse(data))
+      } else {
+        getComment()
+      }
+    }
+  }
+
+  newestCommentInit()
+  document.addEventListener('pjax:complete', newestCommentInit)
+})</script><script type='text/javascript' src='https://ajax.loli.net/ajax/libs/jquery/3.2.1/jquery.min.js'></script><div class="aplayer no-destroy" data-id="7422861869" data-server="netease" data-type="playlist" data-fixed="true" data-autoplay="true" data-lrcType="-1"> </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer@1/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/gh/metowolf/MetingJS@1.2/dist/Meting.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
